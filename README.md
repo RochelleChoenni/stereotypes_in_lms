@@ -45,5 +45,3 @@ To run your own experiments first fine-tune a model on a data source of choice, 
     year={2021}
 }
 ```
-
-

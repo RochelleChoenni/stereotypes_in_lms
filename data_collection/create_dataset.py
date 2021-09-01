@@ -161,7 +161,7 @@ def check_query(word_list, pred, group):
 	else:
 		return False
 
-def main():#(eng_target_dict, templates, country_templates, savefile='stereo_dataset/merged_data.csv'):
+def main():
 	'''
 	Retrieve data from all three search engines into a csv file.
 	'''
@@ -177,3 +177,4 @@ def main():#(eng_target_dict, templates, country_templates, savefile='stereo_dat
 
 if __name__ == '__main__':
     main()
+
