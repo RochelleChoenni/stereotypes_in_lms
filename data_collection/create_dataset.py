@@ -1,6 +1,6 @@
 '''
-	This file is used to create a dataset containing stereotypical autocomplete suggestions from three search engines:
-	Google, Yahoo and DuckDuckGo. The publicly available API's are used for the resepective search engines to collect the data.
+This file is used to create a dataset containing stereotypical autocomplete suggestions from three search engines:
+Google, Yahoo and DuckDuckGo. The publicly available API's are used for the resepective search engines to collect the data.
 '''
 
 # Import packages
@@ -8,6 +8,7 @@ import sys
 import json
 import logging
 import requests
+import argparse
 import numpy as np
 import pandas as pd
 from fake_useragent import UserAgent
@@ -136,9 +137,9 @@ def merge_data(engine1, engine2, engine3, savefile):
 	'''
 	Merge data from different search engines into one file.
 	'''
-	df1 = pd.read_csv(engine1+'_data.csv', encoding='utf-8', sep='\t')
-	df2 = pd.read_csv(engine2+'_data.csv', encoding='utf-8', sep='\t')
-	df3 = pd.read_csv(engine3+'_data.csv', encoding='utf-8', sep='\t')
+	df1 = pd.read_csv('stereo_dataset/'+engine1+'_data.csv', encoding='utf-8', sep='\t')
+	df2 = pd.read_csv('stereo_dataset/'+engine2+'_data.csv', encoding='utf-8', sep='\t')
+	df3 = pd.read_csv('stereo_dataset/'+engine3+'_data.csv', encoding='utf-8', sep='\t')
 	df = pd.concat([df1, df2, df3]).sort_values('target_group')
 	df.to_csv(savefile, index=False,  encoding='utf-8', sep='\t')
 
@@ -160,15 +161,19 @@ def check_query(word_list, pred, group):
 	else:
 		return False
 
-def main(eng_target_dict, templates, country_templates, savefile='merged_data.csv'):
+def main():#(eng_target_dict, templates, country_templates, savefile='stereo_dataset/merged_data.csv'):
 	'''
 	Retrieve data from all three search engines into a csv file.
 	'''
-	data_collection(eng_target_dict, templates, country_templates, google, savefile ='google_data.csv')
-	data_collection(eng_target_dict, templates, country_templates, yahoo, savefile ='yahoo_data.csv')
-	data_collection(eng_target_dict, templates, country_templates, duckduckgo, savefile ='duckduckgo_data.csv')
-	merge_data('google', 'yahoo', 'duckduckgo', savefile)
+	parser = argparse.ArgumentParser()
+	parser.add_argument("--save_path", default="stereo_dataset/merged_data.csv", type=str, help="Path to save dataset")
+	args = parser.parse_args()
+
+	data_collection(eng_target_dict, templates, country_templates, google, savefile ='stereo_dataset/google_data.csv')
+	data_collection(eng_target_dict, templates, country_templates, yahoo, savefile ='stereo_dataset/yahoo_data.csv')
+	data_collection(eng_target_dict, templates, country_templates, duckduckgo, savefile ='stereo_dataset/duckduckgo_data.csv')
+	merge_data('google', 'yahoo', 'duckduckgo', args.save_path)
 
 
 if __name__ == '__main__':
-    main(eng_target_dict, templates, country_templates)
+    main()

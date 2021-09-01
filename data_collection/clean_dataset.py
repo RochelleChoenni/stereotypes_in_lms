@@ -3,6 +3,7 @@ This code is used to aggregate samples that are identical for multiple search en
 and to clean up the duplicate predictions from the same search engines. Note that,
 after running this code, further manual cleaning was performed. 
 '''
+import argparse
 import numpy as np
 import collections
 import pandas as pd
@@ -24,3 +25,20 @@ def filter_duplicates(dataframe, savefile):
     df = df.drop_duplicates()
     df.to_csv(savefile, index=False,  encoding='utf-8', sep='\t')
 
+
+def main():
+    '''
+    Remove duplicates from a csv file.
+    '''
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument("--file_path", default="stereo_dataset/stereotypes_data.csv", type=str, help="Path to retrieve dataset")
+    parser.add_argument("--save_path", default="stereo_dataset/cleaned_dataset.csv", type=str, help="Path to save dataset")
+
+    args = parser.parse_args()
+
+    filter_duplicates(args.file_path, args.save_path)
+
+
+if __name__ == '__main__':
+    main()
