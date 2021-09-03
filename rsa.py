@@ -7,7 +7,7 @@ import logging
 
 import matplotlib.pyplot as plt
 
-from compute_emotion_scores import compute_emotion_scores
+from compute_emotion_scores import compute_emotion_scores, finetuned_emotion_scores
 import seaborn as sns
 
 from mpl_toolkits.axes_grid1 import make_axes_locatable
@@ -258,7 +258,7 @@ def comparison_within_models(cat_of_interest, model, finetuned='finetuned1epoch'
             output_dir = 'emotion_scores/' + finetuned 
         else: 
             output_dir = 'emotion_scores/finetuned1epoch/'+ names[model]     
-        array, targets = compute_emotion_scores(models[i],  cat_of_interest,  output_dir, labels[i])
+        array, targets =  compute_emotion_scores(models[i],  cat_of_interest,  output_dir, labels[i])
         vectors.append(array)    
 
     x, C = get_dists(vectors, labels=labels, ticklabels=targets, distance="cosine")

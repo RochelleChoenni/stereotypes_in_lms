@@ -111,6 +111,7 @@ def finetuned_target_emotion_words(dicti, model_path, source, templates, country
 
 
 def compute_emotion_scores(model_name, cat_of_interest,  savedir, name):
+
     if path.isfile(savedir+'/'+cat_of_interest+'_'+model_name+'.json'):
         #print('Retrieving existing data..')
         dictionary = json.load(open(savedir+'/'+cat_of_interest+'_'+model_name+'.json',"r"))
@@ -171,7 +172,6 @@ def compute_emotion_scores(model_name, cat_of_interest,  savedir, name):
     #plot_and_save_fig(total, targets, model_name, savedir, cat_of_interest, name)
 
     return np.array(total), targets
-
 
 
 

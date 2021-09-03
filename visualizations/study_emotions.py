@@ -68,10 +68,12 @@ def plot_emotion_vectors(Model, Groups):
         dictionary = json.load(open('mlm_output/'+names[Model]+'.json',"r"))
         total = []
         counts = []
-        df = pd.read_excel('NRC-Emotion-Lexicon-v0.92/NRC-Emotion-Lexicon-v0.92-In105Languages-Nov2017Translations.xlsx',  encoding='utf-8', sep='\t')
+        df = pd.read_excel('emotion_scores/NRC-Emotion-Lexicon-v0.92-In105Languages-Nov2017Translations.xlsx',  encoding='utf-8', sep='\t')
         targets = []
         word_list = []
-        for group in Groups:     
+        print(Groups)
+        G = Groups.split(',')
+        for group in G:     
             print("--------------"+ group + "-------------------")
             anger_list = []
             disgust_list = []
@@ -103,7 +105,7 @@ def plot_emotion_vectors(Model, Groups):
                     continue;
 
             order= ['Negative', 'Positive',  'Disgust', 'Anger','Fear','Sadness', 'Trust', 'Joy', 'Surprise', 'Anticipation']
-            x = [np.round(emo_dict[o],2) for o in order] #+ [counter]
+            x = [np.round(emo_dict[o],2) for o in order]
             targets.append(group)
             total.append(x)
             counts.append(counter)
