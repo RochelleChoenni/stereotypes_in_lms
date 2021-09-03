@@ -7,7 +7,7 @@ import logging
 
 import matplotlib.pyplot as plt
 
-from compute_emotion_scores import compute_emotion_scores, finetuned_emotion_scores
+from compute_emotion_scores import compute_emotion_scores
 import seaborn as sns
 
 from mpl_toolkits.axes_grid1 import make_axes_locatable
@@ -33,40 +33,19 @@ def write_matrix(data, filename, labels=[]):
             f.write('\n')
             i += 1
 
-### Representational Similarity Analysis
 # Calculate similarity matrices for all languages
-
 def get_dists(data, labels=[], ticklabels=[], distance="cosine", save_dir="plots/"):
     #logging.info("Calculating dissimilarity matrix")
     x = {}
     C = {}
-
     # For each list of vectors
     for i in np.arange(len(data)):
         x[i] = data[i]
     
         # Calculate distances between vectors
-        #print("Calculating cosine for: " + labels[i])
         C[i] = 1 - (sp.spatial.distance.cdist(x[i], x[i], distance) + 0.00000000001)
-        #print("Normalizing")
         # Normalize
         C[i] /= C[i].max()
-
-    # Uncomment this if you want to plot the matrices for all languages. This might be useful for more detailed analyses.
-    # for i in C:
-    #     print(C[i].shape)
-    #     print("Start plotting")
-        # if len(ticklabels) == 0:
-        #     ticklabels = [x for x in range(1, len(C[i]) + 1)]
-        # print(ticklabels)
-        # print(save_dir)
-        # print(C[i].shape)
-        # print(C[i][ 0:40,0:40].shape)
-        # # Only plot the first 40 words
-        # fig = get_plot(C[i][0:40,0:40], ticklabels[0:40], labels[i], cbarlabel=(distance.capitalize() + " Similarity"))
-        # fig.savefig(save_dir + "RDM_" + labels[i] + ".png")
-
-
     return x, C
 
 
@@ -77,7 +56,6 @@ def compute_distance_over_dists(x, C, labels, cat, savedir ):
 
     # We calculate three different measures.
     spearman = np.zeros((len(keys), len(keys)))
-    # pearson = np.zeros((len(keys), len(keys)))
     for i in np.arange(len(keys)):
         for j in np.arange(len(keys)):
             corr_s = []
@@ -88,8 +66,7 @@ def compute_distance_over_dists(x, C, labels, cat, savedir ):
                 corr_s.append(s)
                 corr_p.append(p)
             spearman[i][j] = np.mean(corr_s)
-            # If you prefer Pearson correlation
-            # pearson[i][j] = np.mean(corr_p)
+
 
    
     # Uncomment this, if you want to plot the matrix and save it.
@@ -135,7 +112,6 @@ def heatmap(data, row_labels, col_labels, ax=None,
         cbarlabel  : The label for the colorbar
     All other arguments are directly passed on to the imshow call.
     """
-
     if not ax:
         ax = plt.gca()
 
@@ -178,53 +154,6 @@ def heatmap(data, row_labels, col_labels, ax=None,
     return im, cbar
 
 
-params = 'all_eng'
-
-
-if params == 'all_eng':
-    models =['bert-base-uncased', 'bert-large-uncased', 'roberta-base', 'roberta-large', 'bart-base', 'bart-large', 'bert-base-multilingual-uncased', 'xlm-roberta-base', 'xlm-roberta-large']
-    labels = ['BERT-B', 'BERT-L', 'RoBERTa-B', 'RoBERTa-L', 'BART-B', 'BART-L', 'mBERT', 'XLMR-B', 'XLMR-L']
-    output_dir = 'all_eng_freq'     
-elif params == 'finetuned':
-    models =['bert-base-uncased',  'new_yorker', 'guardian', 'reuters', 'fox', 'breitbart']
-    labels = ['BERT-B', 'NewYorker', 'Guardian', 'Reuters', 'FoxNews', 'Breitbart']
-    output_dir = 'finetuned1epoch/bert-base'     
-elif params == 'ablation':
-    models =['bert-base-uncased', 'new_yorker', 'guardian', 'reuters', 'fox', 'breitbart']
-    labels = ['BERT-B', 'NewYorker', 'Guardian', 'Reuters', 'FoxNews', 'Breitbart']
-    output_dir = 'finetuned-half'     
-
-'''
-shifts = []
-for cat_of_interest in ['religion', 'profession', 'lifestyle', 'sexuality', 'race', 'gender', 'age', 'political']:
-    vectors = []
-    for i in range(0, len(models)):
-        if models[i] == 'bert-base-uncased':
-            save = output_dir
-            output_dir = 'finetuned1epoch/bert-base'  
-
-        
-        array, targets = en_target_emotions(models[i],  cat_of_interest,  output_dir, labels[i])
-        vectors.append(array)
-        print(models[i], cat_of_interest, "Done")
-        if models[i] == 'bert-base-uncased':
-            output_dir = save
-
-
-    x, C = get_dists(vectors, labels=labels, ticklabels=targets, distance="cosine")
-    # Calculate RSA over all languages
-    emotion_shift = compute_distance_over_dists(x, C, labels, cat_of_interest, output_dir)
-    shifts.append(emotion_shift)
-    print(emotion_shift)
-    print("done.. ", cat_of_interest)
-
-shifts = np.array(shifts)    
-print(shifts)
-print(np.mean(shifts, axis=0))
-print(np.std(shifts, axis=0))
-'''
-
-
 def comparison_across_models(cat_of_interest):
 
     models =['bert-base-uncased', 'bert-large-uncased', 'roberta-base', 'roberta-large', 'bart-base', 'bart-large', 'bert-base-multilingual-uncased', 'xlm-roberta-base', 'xlm-roberta-large']
@@ -265,31 +194,3 @@ def comparison_within_models(cat_of_interest, model, finetuned='finetuned1epoch'
     # Calculate RSA over all languages
     emotion_shift, im, cbar = compute_distance_over_dists(x, C, labels, cat_of_interest, output_dir)
     return  im, cbar
-
-'''
-shifts= []
-vectors = []
-ts = []
-for i in range(0, len(models)):
-    store_v = []
-    store_t = [] 
-    for cat_of_interest in ['religion',  'profession', 'lifestyle', 'sexuality', 'race', 'gender', 'country', 'age', 'political']:
-        array, targets = en_target_emotions(models[i],  cat_of_interest,  output_dir, labels[i])
-        store_v.append(array)
-        store_t.append(targets)
-    vectors.append([item for sublist in store_v for item in sublist])
-    ts.append([item for sublist in store_t for item in sublist])
-
-
-x, C = get_dists(vectors, labels=labels, ticklabels=ts, distance="cosine")
-# Calculate RSA over all languages
-emotion_shift, spearman = compute_distance_over_dists(x, C, labels, cat_of_interest, output_dir)
-shifts.append(emotion_shift)
-print("done.. ", cat_of_interest)
-
-shifts = np.array(shifts)    
-print(spearman)
-print(shifts)
-print(np.mean(shifts, axis=0))
-print(np.std(shifts, axis=0))
-'''

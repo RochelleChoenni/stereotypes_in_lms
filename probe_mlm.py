@@ -322,38 +322,3 @@ def get_finetuned_all_cat(models, names, pick):
 	plt.grid(True)
 	plt.savefig(pick+'-human-finetuned.pdf', bbox_inches='tight',pad_inches = 0 )
 	plt.show()
-
-'''
-for source in [ 'fox']:
-
-	model = 'emotion_affect/finetuned-tenth/bert-base/'+source
-	save_name = 'tenth-finetuned/'+source
-	get_pred_completion('emotion_affect/stereo_dataset/final_probe.csv', model, save_name)
-	get_prior_probs(model, save_name, save_name+'_dict.json')
-	correct_with_prior_probs(model, save_name, save_name+'_dict.json', save_name+'_priors.json')
-
-models = ['finetuned/bert-base/breitbart',  'finetuned/bert-base/reuters', 'finetuned/bert-base/guardian', 'finetuned/bert-base/new_yorker', 'finetuned/bert-base/fox',
-			'half-finetuned/bert-base/breitbart',  'half-finetuned/bert-base/reuters', 'half-finetuned/bert-base/guardian', 'half-finetuned/bert-base/new_yorker', 'half-finetuned/bert-base/fox',
-			'quart-finetuned/bert-base/breitbart',  'quart-finetuned/bert-base/reuters', 'quart-finetuned/bert-base/guardian', 'quart-finetuned/bert-base/new_yorker', 'quart-finetuned/bert-base/fox',
-				'tenth-finetuned/bert-base/breitbart',  'tenth-finetuned/bert-base/reuters', 'tenth-finetuned/bert-base/guardian', 'tenth-finetuned/bert-base/new_yorker', 'tenth-finetuned/bert-base/fox']
-names = ['breitbart-100',  'reuters-100', 'guardian-100', 'new_yorker-100', 'fox-100', 'breitbart-50',  'reuters-50', 'guardian-50', 'new_yorker-50', 'fox-50', 
-			'breitbart-25',  'reuters-25', 'guardian-25', 'new_yorker-25', 'fox-25', 
-			'breitbart-10',  'reuters-10', 'guardian-10', 'new_yorker-10', 'fox-10']
-'''
-'''
-pick = 'breitbart' 
-models = ['new_result/bert-base-uncased',
-	'finetuned/bert-base/'+pick, 
-			'half-finetuned/bert-base/'+pick, 
-			'quart-finetuned/bert-base/'+pick, 
-				'tenth-finetuned/bert-base/'+pick]
-
-names = ['BERT-B',pick+'-100',  pick+'-50', pick+'-25',  pick+'-10']
-'''
-'''
-for c in ['religion','race', 'profession', 'gender', 'age', 'political', 'lifestyle', 'country']: 
-	#get_finetuned_per_cat(c, models, names, 'quart-finetuned/')
-	get_results_per_cat(c)
-'''
-#get_finetuned_all_cat(models, names, pick)
-

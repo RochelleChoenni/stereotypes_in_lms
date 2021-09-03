@@ -124,7 +124,7 @@ def compute_emotion_scores(model_name, cat_of_interest,  savedir, name):
         dictionary = json.load(open(savedir+'/'+model_name+'.json',"r"))
         total = []
         counts = []
-        df = pd.read_excel('NRC-Emotion-Lexicon-v0.92/NRC-Emotion-Lexicon-v0.92-In105Languages-Nov2017Translations.xlsx',  encoding='utf-8', sep='\t')
+        df = pd.read_excel('emotion_scores/NRC-Emotion-Lexicon-v0.92-In105Languages-Nov2017Translations.xlsx',  encoding='utf-8', sep='\t')
         targets = []
         word_list = []
         for group in sorted(dictionary.keys(), key=lambda x:x.lower()):     
@@ -149,14 +149,13 @@ def compute_emotion_scores(model_name, cat_of_interest,  savedir, name):
                     continue;
 
             order= ['Negative', 'Positive',  'Disgust', 'Anger','Sadness', 'Fear', 'Trust', 'Joy', 'Surprise', 'Anticipation']
-            x = [np.round(emo_dict[o],2) for o in order] #+ [counter]
+            x = [np.round(emo_dict[o],2) for o in order]
+
             targets.append(group)
             total.append(x)
             counts.append(counter)
             word_list.append(covered)
-            #print(group, "Found: ", counter, "Not found: ", len(w_dict_g)-counter, "%: ", (counter/ len(w_dict_g)) *100)
-
-        #total  = [[(x-min(l))/(max(l)-min(l))*100 for x in l] for l in total]
+          
         total = [[(l/counts[n])*100 for l in total[n]] for n in range(0, len(total))]
 
         save_dict = {}
@@ -177,32 +176,4 @@ def compute_emotion_scores(model_name, cat_of_interest,  savedir, name):
 
 eng_templates = ['why are term_to_use so', "what makes term_to_use so", 'how come term_to_use are so', "why are term_to_use always so", 'why are all term_to_use so']
 eng_country_templates = ['why is term_to_use so', "what makes term_to_use so", 'how come term_to_use is so', "why is term_to_use always so", 'why are all people in term_to_use so' ]
-
-
-#finetuned_target_emotion_words(eng_target_dict, "finetuned1epoch/xlmr-base/guardian", 'guardian', eng_templates, eng_country_templates, 'finetuned1epoch/xlmr-base')
-#finetuned_target_emotion_words(eng_target_dict, "finetuned1epoch/xlmr-base/new_yorker", 'new_yorker', eng_templates, eng_country_templates, 'finetuned1epoch/xlmr-base')
-#finetuned_target_emotion_words(eng_target_dict, "finetuned1epoch/xlmr-base/fox", 'fox', eng_templates, eng_country_templates, 'finetuned1epoch/xlmr-base')
-#finetuned_target_emotion_words(eng_target_dict, "finetuned1epoch/xlmr-base/breitbart", 'breitbart', eng_templates, eng_country_templates, 'finetuned1epoch/xlmr-base')
-#finetuned_target_emotion_words(eng_target_dict, "finetuned1epoch/bert-base/reuters", 'reuters', eng_templates, eng_country_templates, 'finetuned1epoch/bert-base')
-#finetuned_target_emotion_words(eng_target_dict, "finetuned1epoch/roberta-base/reuters", 'reuters', eng_templates, eng_country_templates, 'finetuned1epoch/roberta-base')
-#finetuned_target_emotion_words(eng_target_dict, "finetuned1epoch/mbert/reuters", 'reuters', eng_templates, eng_country_templates, 'finetuned1epoch/mbert')
-#finetuned_target_emotion_words(eng_target_dict, "finetuned1epoch/bart-base/reuters", 'reuters', eng_templates, eng_country_templates, 'finetuned1epoch/bart-base')
-
-#finetuned_target_emotion_words(eng_target_dict, "finetuned-tenth/breitbart", 'breitbart', eng_templates, eng_country_templates, "finetuned-tenth/")
-#finetuned_target_emotion_words(eng_target_dict, "finetuned-tenth/fox", 'fox', eng_templates, eng_country_templates, "finetuned-tenth/")
-#finetuned_target_emotion_words(eng_target_dict, "finetuned-tenth/reuters", 'reuters', eng_templates, eng_country_templates, "finetuned-tenth/")
-#finetuned_target_emotion_words(eng_target_dict, "finetuned-tenth/guardian", 'guardian', eng_templates, eng_country_templates, "finetuned-tenth/")
-#finetuned_target_emotion_words(eng_target_dict, "finetuned-tenth/new_yorker", 'new_yorker', eng_templates, eng_country_templates, "finetuned-tenth/")
-
-
-
-#finetuned_target_emotion_words(eng_target_dict, "finetuned1epoch/bart-base/new_yorker", 'new_yorker', eng_templates, eng_country_templates, 'finetuned1epoch/bart-base')
-
-#universal_target_emotions('de_bert-base-multilingual-uncased.json', 'country',  'rsa_de', 'German (de)', gt_dict=eng_target_dict, s_dict=de_target_dict)
-
-#get_target_emotion_words(nl_target_dict, 'xlm-roberta-base', nl_templates, nl_country_templates, 'nl')
-#get_target_emotion_words(spa_target_dict, 'roberta-large')
-#get_target_emotion_words(nl_target_dict, "bert-base-multilingual-uncased", nl_templates, nl_country_templates, 'nl')
-#get_target_emotion_words(spa_target_dict, 'dccuchile/bert-base-spanish-wwm-uncased')
-
 

@@ -16,11 +16,11 @@ def pca_scatterplot_3D(Model, Category, sample=20):
         else:
             Groups = [ word for word in model.keys() ]
 
-    #Groups = Groups.split(',')
   
     word_vectors = np.array([model[w.lower()][0] for w in Groups])
     
     three_dim = PCA(random_state=42).fit_transform(word_vectors)[:,:3]
+
     # For 2D, change the three_dim variable into something like two_dim like the following:
     data = []
     count = 0
@@ -28,13 +28,10 @@ def pca_scatterplot_3D(Model, Category, sample=20):
     for i in range (len(user_input)):
                
                 trace = go.Scatter3d(
-                    x = [word_vectors[i][0]], #[three_dim[i][0]], 
-                    y = [word_vectors[i][1]], #[three_dim[i][1]],
-                    z = [word_vectors[i][3]],#+word_vectors[i][3]], #[three_dim[i][2]],
-                   
+                    x = [word_vectors[i][0]], 
+                    y = [word_vectors[i][1]], 
+                    z = [word_vectors[i][3]],
                     text = Groups[i] + '('+str(int(word_vectors[i][0]))+','+ str(int(word_vectors[i][1]))+ ','+str(int(word_vectors[i][3]))+')',
-                    #text = words[i] + '('+str(int(three_dim[i][0]))+','+ str(int(three_dim[i][1]))+ ','+str(int(three_dim[i][2]))+')',
-
                     textposition = "top center",
                     textfont_size = 14,
                     mode = 'markers+text',
@@ -124,15 +121,6 @@ def display_pca_scatterplot_2D(model, user_input=None, words=None, label=None, c
               
                 data.append(trace)
                 count +=1
-
-                # For 2D, instead of using go.Scatter3d, we need to use go.Scatter and delete the z variable. Also, instead of using
-                # variable three_dim, use the variable that we have declared earlier (e.g two_dim)
-            
-
-
-    # For 2D, instead of using go.Scatter3d, we need to use go.Scatter and delete the z variable.  Also, instead of using
-    # variable three_dim, use the variable that we have declared earlier (e.g two_dim)
-            
     
 # Configure the layout
 

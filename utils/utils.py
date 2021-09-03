@@ -173,7 +173,7 @@ def plot_and_save_fig(data, targets, model_name, savedir, cat_of_interest, name,
     if not os.path.exists(savedir+'/'+cat_of_interest):
     	os.makedirs(savedir+'/'+cat_of_interest)
     #fig.savefig(savedir+'/'+cat_of_interest+'/'+model_name+'_'+cat_of_interest+'.pdf', bbox_inches='tight')
-    fig.savefig('paper_plots_finetuned/'+cat_of_interest+'/'+model_name+'_'+cat_of_interest+'.pdf', bbox_inches='tight',pad_inches = 0 )
+    fig.savefig(savedir+'/'+cat_of_interest+'/'+model_name+'_'+cat_of_interest+'.pdf', bbox_inches='tight',pad_inches = 0 )
 
     print(savedir+'/'+model_name+'_'+cat_of_interest+'.pdf', np.array(data).shape)
     plt.close()
@@ -195,54 +195,6 @@ def compare_model_predictions(json1, json2, key_list):
             elif i in dict2[group][1]:
                 base.append(i)
 
-        #print("Non overlap: ",len(list(set(dict1[group])^set(dict2[group])) ))
         print("Finetune: ", breit)
         print("Bert-BASE: ", base)
         print(len(breit), len(base))
-    '''
-    for group in sorted(dict1.keys(), key=lambda x:x.lower()):
-        print(group)
-        non_intersect = set(dict1[group])^set(dict2[group])
-        breit = []
-        base = []
-        for i in non_intersect: 
-            if i in dict1[group]:
-                breit.append(i)
-            elif i in dict2[group]:
-                base.append(i)
-
-        #print("Non overlap: ",len(list(set(dict1[group])^set(dict2[group])) ))
-        print("BREIT: ", breit)
-        print("Bert-BASE: ", base)
-        print(len(breit), len(base))
-    '''
-'''
-l1 = compare_model_predictions('race_en_fox_6.json', 'race_en_bert-base-uncased.json', ['blacks', 'black people', 'black kids', 'black parents'])
-l2 = compare_model_predictions('country_en_fox_6.json', 'country_en_bert-base-uncased.json', ['Iraq'])
-
-def find_articles_for_word(source, val_source, word):
-    file1 = open(source, 'r')
-    lines = file1.readlines()
-    file2 = open(val_source, 'r')
-    lines += file2.readlines()
-    count =0
-    for i in lines:
-        if word in i:
-            sents = i.split('.')
-            #print(i)
-            #for s in sents:
-                #if word in s:
-                    #print(s)
-            count+=1
-            #print('-------------------------')
-    return count
-'''
-#w = ' elders '
-
-#find_articles_for_word('archive/breitbart_train_split.txt','archive/breitbart_val_split.txt', w)
-#find_articles_for_word('archive/guardian_train_split.txt', 'archive/guardian_val_split.txt', w)
-#find_articles_for_word('archive/nytimes_train_split.txt', 'archive/nytimes_val_split.txt', w)
-
-#find_articles_for_word('archive/cnn_train_split.txt','archive/cnn_val_split.txt', w)
-
-#find_articles_for_word('archive/train_split.txt','archive/val_split.txt', w)
