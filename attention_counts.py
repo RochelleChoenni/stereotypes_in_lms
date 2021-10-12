@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# coding=utf-8
+
 import os, sys
 import re, string
 import pandas as pd
@@ -5,6 +8,9 @@ import torch
 from transformers import AutoTokenizer, AutoModel
 from datasets import load_dataset
 from typing import Dict
+import json
+# from docopt import docopt
+
 
 # TODO think about setting up python 3.7 env as rochelle was using
 
@@ -16,10 +22,18 @@ def group_tokens_to_ids(tokens, tokenizer):
     if type(tokens) == list:
         ids = {token: idx for token, idx in zip(tokens, tokenizer.convert_tokens_to_ids(tokens))}
     if type(tokens) == dict:
-        ids = {cat: {token: idx for token, idx in zip(tokens[cat], tokenizer.convert_tokens_to_ids(tokens[cat])) if idx != 100} for cat in tokens.keys()}
+        ids = {}
+        for cat in tokens.keys():
+            ids[cat] = {}
+            print(tokens[cat].values())
+            for token in tokens[cat].values(): # idx in zip(tokens[cat], tokenizer.convert_tokens_to_ids(tokens[cat])):
+                if token not in [tokenizer.unk_token, tokenizer.pad_token, tokenizer.cls_token, tokenizer.mask_token, tokenizer.sep_token]:
+                    ids[cat][token] = tokenizer.convert_tokens_to_ids(token)
+        # ids = {cat: {token: idx for token, idx in zip(tokens[cat], tokenizer.convert_tokens_to_ids(tokens[cat])) if idx != 100} for cat in tokens.keys()}
     return ids
 
 def group_texts(examples, block_size=128):
+
     # Concatenate all texts.
     concatenated_examples = {k: sum(examples[k], []) for k in examples.keys()}
     total_length = len(concatenated_examples[list(examples.keys())[0]])
@@ -34,7 +48,10 @@ def group_texts(examples, block_size=128):
     result["labels"] = result["input_ids"].copy()
     return result
 
-def attention_weighted_counts(args: Dict):
+# def attention_weighted_counts(args: Dict):
+# def attention_weighted_counts(newspaper='Breitbart', reference_word='girl', model_path='bert-base-uncased', layer_id=11, attention_head_id=0, save_name=''):
+def attention_weighted_counts(newspaper='Breitbart', reference_word='girl', model_path='bert-base-uncased', save_name=''):
+
     '''
     Given a category of interest (reference_word) and a list of strings that each contain reference word count the emotion words
     Counts are weighted by the attention when passing concordances through an LM
@@ -44,21 +61,26 @@ def attention_weighted_counts(args: Dict):
     attention_weighted_counts(concordances_fox_girl, 'girl', 'bert-base-uncased', emotionwords_dict, 11, 0)
     '''
 
-    newspaper = str(args['--newspaper'])
-    reference_word = str(args['--reference_word'])
-    model_path = str(args['--model_path'])
-    layer_id = int(args['--layer_id'])
-    attention_head_id = int(args['--attention_head_id'])
-
-    #load emotion words
-    emotionwords = pd.read_excel('../data/external/NRC-Emotion-Lexicon-v0.92-In105Languages-Nov2017Translations.xlsx', usecols="A,DB:DK")
-    emotions = list(emotionwords.columns[1:])
-    emotionwords_dict = {emotion: list(emotionwords['English (en)'].loc[emotionwords[emotion]==1]) for emotion in emotions}
-    print('--loaded emotion words--')
+    # newspaper = str(args['--newspaper'])
+    # reference_word = str(args['--reference_word'])
+    # model_path = str(args['--model_path'])
+    # layer_id = int(args['--layer_id'])
+    # attention_head_id = int(args['--attention_head_id'])
+    # save_name = str(args['--save_name'])
 
     tokenizer = AutoTokenizer.from_pretrained(model_path)#, do_lower_case=True)
     model = AutoModel.from_pretrained(model_path, output_attentions=True)
     print('--defined model--')
+
+    #load emotion words
+    emotionwords = pd.read_excel('../bias/data/external/NRC-Emotion-Lexicon-v0.92-In105Languages-Nov2017Translations.xlsx', usecols="A,DB:DK")
+    emotions = list(emotionwords.columns[1:])
+    emotionwords_dict = {emotion: [str(elt) for elt in list(emotionwords['English (en)'].loc[emotionwords[emotion]==1])] for emotion in emotions}
+    print('--loaded emotion words--')
+
+    # emotion tokens to ids
+    emotion_ids = group_tokens_to_ids(emotionwords_dict, tokenizer)
+    print('--mapped emotion word tokens to ids--')
 
     news = load_dataset('csv', script_version='master', data_files=['../data/external/archive/articles1.csv', '../data/external/archive/articles2.csv', '../data/external/archive/articles3.csv'],
                           column_names = ['Unnamed', 'id', 'title', 'publication', 'author', 'date', 'year', 'month', 'url', 'content']).remove_columns(['Unnamed', 'title', 'author', 'year', 'month', 'url', 'date'])
@@ -104,48 +126,70 @@ def attention_weighted_counts(args: Dict):
 
     # get list of lists with tuples (word_idx, attention from reference word to this word)
     print('--collecting counts--')
-    w_cts = [[(idx.item(), attention.item()/N) for idx, attention in zip(input_ids[sentence_id], attentions[layer_id][sentence_id, attention_head_id, input_ids[sentence_id].tolist().index(idx),:])] for sentence_id in range(input_ids.shape[0])]
-        
-    # flatten list
-    w_cts = [item for sublist in w_cts for item in sublist]
-    
-    # emotion tokens to ids
-    print('--mapping emotion word tokens to ids--')
-    emotion_ids = group_tokens_to_ids(emotionwords_dict, tokenizer)
-        
-    print('--summing over emotion categories--')
-    sum_w_cts = {emotion: sum([sum([ct[1] for ct in w_cts if ct[0] == emotion_term_id]) for emotion_term_id in emotion_ids[emotion].values()]) for emotion in emotions}
-    
+    # this gives a dict of shape {layer_id: {attention_head_id : {emotion: sum of weighted counts for words belonging to this emotion}}}
+    outdict = {}
+    for layer_id in range(12):# don't hard code this if I want to change to different architectures
+        outdict[layer_id] = {}
+        for attention_head_id in range(12): # same don't hard code
+            w_cts = [[(idx.item(), attention.item()/N) for idx, attention in zip(input_ids[sentence_id], attentions[layer_id][sentence_id, attention_head_id, input_ids[sentence_id].tolist().index(idx),:])] for sentence_id in range(input_ids.shape[0])]
+            # flatten list
+            w_cts = [item for sublist in w_cts for item in sublist]
+            sum_w_cts = {emotion: sum([sum([ct[1] for ct in w_cts if ct[0] == emotion_term_id]) for emotion_term_id in emotion_ids[emotion].values()]) for emotion in emotions}
+            outdict[layer_id][attention_head_id] = sum_w_cts
+
+        # calculate sum and avg across heads in one layer
+        outdict[layer_id]['sum'] = {}
+        outdict[layer_id]['avg'] = {}
+        for emotion in emotions:
+            ct = 0
+            for attention_head_id in range(12):
+                ct += outdict[layer_id][attention_head_id][emotion]
+            outdict[layer_id]['sum'][emotion] = ct
+            outdict[layer_id]['avg'][emotion] = ct/12
+
     print('--finished weighted counts of emotion words--')
 
-    return sum_w_cts
+    a_file = open(save_name+'weighted_counts.json', "w")
+
+    json.dump(outdict, a_file)
+
+    a_file.close()
+
+    return outdict
 
 
-def show_counts(newspaper, reference_word, model_path, layer_id, attention_head_id):
-    '''
-    newspapers, gps_of_interest: str or list of strings with newspapers and groups, ie words designating different groups that we are interested in
+# def show_counts(newspaper, reference_word, model_path, layer_id, attention_head_id):
+#     '''
+#     newspapers, gps_of_interest: str or list of strings with newspapers and groups, ie words designating different groups that we are interested in
     
-    Example usage: show_counts('Guardian', 'girl', 'bert-base-uncased', 11, 0)
-    '''
-    # test that this works first
-    if type(newspapers) == str and type(reference_word) == str and type(model_path) == str:
-        cts = attention_weighted_counts(newspaper, reference_word, model_path, layer_id, attention_head_id)
-        print(newspapers, reference_word)
-        print("{:<8} {:<15}".format('Emotion','Score'))
-        for k, v in cts.items():
-            print("{:<8} {:<15}".format(k, v))
+#     Example usage: show_counts('Guardian', 'girl', 'bert-base-uncased', 11, 0)
+#     '''
+#     # test that this works first
+#     if type(newspapers) == str and type(reference_word) == str and type(model_path) == str:
+#         cts = attention_weighted_counts(newspaper, reference_word, model_path, layer_id, attention_head_id)
+#         print(newspapers, reference_word)
+#         print("{:<8} {:<15}".format('Emotion','Score'))
+#         for k, v in cts.items():
+#             print("{:<8} {:<15}".format(k, v))
 
+def main():
+    
+    model_path = 'bert-base-uncased'
+    newspapers = ['Breitbart', 'Fox News', 'Reuters', 'Guardian']
+    # gender terms
+    female_terms = ["girls", "women", "females", "girlfriends", "stepmothers", "ladies", "sisters", "mothers", "grandmothers" "wives", "brides", "schoolgirls", "mommies"]
+    male_terms = ["men", "males", "boys" "boyfriends", "stepfathers", "gentlemen" "brothers", "fathers", "grandfathers", "husbands", "grooms",  "schoolboys",  "daddies"]
 
+    for newspaper in newspapers:
+        for reference_word in female_terms + male_terms:
+            save_name = model_path+'_'+newspaper+'_'+reference_word
+            attention_weighted_counts(newspaper, reference_word, model_path, save_name=save_name) 
 
-# TODO define main
+if __name__ == '__main__':
+    main()
 
-# TODO is this really the best place for this: 
+# TODO is this really the best place for this, clearly not.
 # newspapers = ['breitbart', 'fox', 'reuters', 'guardian']
-newspapers = ['Breitbart', 'Fox News', 'Reuters', 'Guardian']
-
-# gender terms
-female_terms = ["girls", "women", "females", "girlfriends", "stepmothers", "ladies", "sisters", "mothers", "grandmothers" "wives", "brides", "schoolgirls", "mommies"]
-male_terms = ["men", "males", "boys" "boyfriends", "stepfathers", "gentlemen" "brothers", "fathers", "grandfathers", "husbands", "grooms",  "schoolboys",  "daddies"]
 
 # deciding to add some synonyms, singulars, plurals etc
 female_terms = ["she", "her", "girl", "girls", "woman", "women", "female", "females", "girlfriend", "girlfriends", "stepmothers", "lady", "ladies", "sister", "sisters", "mother", "mothers", "grandmothers", "wife", "wives", "bride", "brides", "schoolgirls", "mom", "mum", "moms", "mums", "mummies", "mommies", "miss", "mrs", "ms", "lady", "mistress"]
