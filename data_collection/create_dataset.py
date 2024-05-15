@@ -33,7 +33,7 @@ def data_collection(target_dict, templates, country_templates, func, savefile='t
 		else:
 			temps = country_templates
 		for group in target_dict[category]:
-			for temp in templates: 
+			for temp in temps: 
 				query = temp.replace('term_to_use', group)
 				keywords = query.replace(" ", "+")
 				i, c, t, cat = func(keywords, query, temp, group, category)
